@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{user}
+  div#calendar
+   script.
+     var ev ={ events : [{
+                title: '최성일/GA/오전',
+                start: '2014-04-04'
+             }]};
+     $(document).ready(function(){ $('#calendar')
+       .fullCalendar(ev);
+               }); 

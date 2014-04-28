@@ -1,0 +1,19 @@
+
+
+h1 Sign Up
+
+form(method="POST", action="/signUp")
+  p
+    label(for="username") User name:<br />
+    input#username(name="username")
+  p
+    label(for="password") Password:<br />
+    input#password(type="password", name="password")
+  p
+    label(for="confirmpassword") Confirm Password: <br />
+    input#password(type="password", name="confirmpassword")
+  p
+    label(for="studentnumber") Student Number: <br />
+    input#studentnumber(name="studentnumber")
+  p
+    input(type="submit", value="Log in")

@@ -1,0 +1,10 @@
+extends layout
+
+block content_clock
+  div#clock
+    script.
+      $(document).ready(function(){ $('#clock')
+                 .flipcountdown({time:function(){
+                 return new Date('5.10.2012 12:34:23');
+                 }});
+                 }); 

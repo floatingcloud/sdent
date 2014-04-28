@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{user}
+  div#clock
+  div#calendar
+    script.
+      var ev ={ events : [{
+                title: '최성일/GA/오전/(1/2)',
+                start: '2014-04-04'
+             }]};
+      $(document).ready(function(){ 
+        $('#calendar').fullCalendar(ev);
+        $('#clock').flipcountdown({time:function(){
+          return new Date();}});
+
+      }); 
