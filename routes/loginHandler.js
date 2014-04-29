@@ -14,7 +14,7 @@ module.exports = function(app) {
                    }
 
                    if(user){
-                     if(validPassword(req.body.password,user.password)){                     
+                     if(validPassword(req.body.password,user.password)){
                         req.session.user = user;
                         corsSend(req, res,'success login');
                      }else{

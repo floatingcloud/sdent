@@ -60,8 +60,8 @@ module.exports = function(nconf){
 
   //generating cors send 
   global.corsSend = function(req, res, data){
-     res.header("Access-Control-Allow-Origin", req.headers.origin);
-     res.header("Access-Control-Allow-Credentials", 'true');
+     //res.header("Access-Control-Allow-Origin", req.headers.origin);
+     //res.header("Access-Control-Allow-Credentials", 'true');
      res.send(data);
   };
 

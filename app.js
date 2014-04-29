@@ -19,6 +19,21 @@ var app = express();
 var server = http.createServer(app);
 var socket_io = require('socket.io');
 
+var allowCrossDomain = function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header("Access-Control-Allow-Credentials", 'true');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
+http://ec2-54-209-162-175.compute-1.amazonaws.com/index.html
+    // intercept OPTIONS method
+    if ('OPTIONS' == req.method) {
+      res.send(200);
+    }
+    else {
+      next();
+    }
+};
+
 // all environments
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
@@ -33,6 +48,7 @@ app.use(express.session({store: session_store ,
                          maxAge: new Date(Date.now() + 3600000),
                          secret: "rlaeodnjs"
                         }));
+app.use(allowCrossDomain);
 
 app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));

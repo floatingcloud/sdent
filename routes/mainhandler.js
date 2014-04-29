@@ -18,10 +18,8 @@ Date.prototype.yyyymmdd = function() {
 
 module.exports = function(io, connect,  sessionStore) {
 
-
-
   io.configure(function(){
-    io.set('log level', 3);
+    io.set('log level', 1);
     io.set('transports', [
         'websocket'
       , 'flashsocket'
@@ -43,7 +41,6 @@ module.exports = function(io, connect,  sessionStore) {
             });
           }else{accept('ERROR', false);};
         }
-
   
     });  
 
@@ -56,7 +53,6 @@ module.exports = function(io, connect,  sessionStore) {
        user.socketId = socket.id;
        //client["sockets:"+user._id.toString()]=socket.id;
 
-
        socket.on('join', function() {
           console.log('hihi');
           socket.emit('joined',user.name);
@@ -64,7 +60,6 @@ module.exports = function(io, connect,  sessionStore) {
       
        //eventList return initially
       socket.on('eventList', function(data){
-            console.log('eventlist');
             Event.find()
                  .sort({_id:-1})
                  .exec(function(err, data){
@@ -80,18 +75,38 @@ module.exports = function(io, connect,  sessionStore) {
                 var ev = new Array();
                 cases.forEach(function(data){
                   ev.push({
-                            title: data.category+'/'+data.charger+'/'+data.ampm+'/('+data.attendants.length+'/'+data.maxPosition+')',
+                            title: data.charger+'/'+ data.category+'/'+data.ampm+'/('+data.attendants.length+'/'+data.maxPosition+')',
                             start: data.startDate.yyyymmdd(),
                             _id: data._id,
-                            attendants: data.attendants
-                            //_event : data._event
+                            attendants: data.attendants,
+                            type: "applyForm",
+                            color: "gold"
                           });
                });
                var sdata = { events: ev};
-               console.log(sdata);
+               //console.log(sdata);
                socket.emit('loadCases',ev);
              });
+      });
 
+      socket.on('loadResult', function(_id){
+         
+      });
+
+      socket.on('loadEventInfo', function(data){
+            Event.findOne({ _id : data })
+                 .populate('priorList')
+                 .populate('exceptors.except')
+                 .exec(function(err, data){
+                   //data.exceptors.forEach(function(item){
+                     //console.log(item);
+                     //console.log(item.except.name);
+                   //});
+                   //
+                   console.log(data);
+                   socket.emit('loadEventInfo', data);
+                 });
+          
       });
 
       //apply for case
@@ -113,7 +128,7 @@ module.exports = function(io, connect,  sessionStore) {
                           if(cas.attendants.length >= cas.maxPosition){
                             //not available positions
 
-                            socket.emit('full');
+                            socket.emit('alert', '이미 꽉찼습니다.');
                             console.log('full - pr');
 
 
@@ -134,7 +149,7 @@ module.exports = function(io, connect,  sessionStore) {
                           }
                       }
 
-                   }
+                  }
                 
                   //apply for ordinary students
                   if(moment((new Date())).isAfter(cas._event.applyTime)&&moment((new Date())).isBefore(cas._event.applyEnd)){
@@ -150,7 +165,7 @@ module.exports = function(io, connect,  sessionStore) {
                                 cas.save(function(err){
                                   if(err)
                                   {
-                                    socket.emit('dberr');
+                                    socket.emit('alert', '서버 저장에 실패했습니다. 다시 시도해주세요.');
                                     return handleError(err);}
                                   else
                                   {
@@ -160,9 +175,10 @@ module.exports = function(io, connect,  sessionStore) {
                                 });
 
                                 }
-                      }else{
-
-                      }
+                 }else{
+                         socket.emit('alert', '신청기간이 아닙니다.');
+                         console.log("not perioid");
+                 }
 
             });
 
