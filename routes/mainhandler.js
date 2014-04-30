@@ -202,7 +202,6 @@ module.exports = function(io, connect,  sessionStore) {
                             //not available positions
 
                             socket.emit('alert', '이미 꽉찼습니다.');
-                            //console.log('full - pr');
 
 
                           }else{
