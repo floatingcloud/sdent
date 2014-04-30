@@ -2,7 +2,6 @@
 var mongoose = require('mongoose');
 var Case = require('../models/case');
 var User = require('../models/user');
-var Except = require('../models/exceptor');
 
 // define the schema for our user model
 var eventSchema = mongoose.Schema({
@@ -16,17 +15,12 @@ var eventSchema = mongoose.Schema({
         applyEnd: Date,
         min: Number,
         priorList : [{type : mongoose.Schema.ObjectId, ref: 'User'}],
-        //exceptionList : [{type : mongoose.Schema.ObjectId, ref: 'Except'}],
         cases : [{type : mongoose.Schema.ObjectId, ref: 'Case'}],
-        //tracks : [{type : mongoose.Schema.ObjectId, ref: 'Track'}],
         exceptors : [{
                     except :{type : mongoose.Schema.ObjectId, ref: 'User'},
                     num : Number
                     }],
-        applier : [{
-                    who :{type : mongoose.Schema.ObjectId, ref: 'User'},
-                    applyNum : Number
-                  }]
+        applier : [{type : mongoose.Schema.ObjectId, ref: 'User'}],
 });
 
 

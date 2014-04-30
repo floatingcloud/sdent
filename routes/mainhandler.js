@@ -54,7 +54,6 @@ module.exports = function(io, connect,  sessionStore) {
        //client["sockets:"+user._id.toString()]=socket.id;
 
        socket.on('join', function() {
-          console.log('hihi');
           socket.emit('joined',user.name);
       });
       
@@ -71,42 +70,61 @@ module.exports = function(io, connect,  sessionStore) {
 
       socket.on('loadCases', function(_id){
          Case.find({_event : _id})
+             .populate('attendants')
              .exec(function(err, cases){
                 var ev = new Array();
+                var re = new Array();
+                var sdata;
                 cases.forEach(function(data){
                   ev.push({
                             title: data.charger+'/'+ data.category+'/'+data.ampm+'/('+data.attendants.length+'/'+data.maxPosition+')',
                             start: data.startDate.yyyymmdd(),
                             _id: data._id,
-                            attendants: data.attendants,
+                            //attendants: data.attendants,
                             type: "applyForm",
                             color: "gold"
                           });
+
+                  data.attendants.forEach(function(ps){
+
+                    re.push({ title: data.charger+'/'+ data.category+'/'+data.ampm+'/'+ps.number+'/'+ps.name,
+                            start: data.startDate.yyyymmdd(),
+                            _id: data._id,
+                            attendants: data.attendants,
+                            type: "result",
+                            });
+
+                        });
+                  });
+
+               sdata = { events: ev,
+                         results : re
+               
+               };
+                  
+                             console.log(sdata);
+                             socket.emit('loadCases',sdata);
+
+
+
+
                });
-               var sdata = { events: ev};
-               //console.log(sdata);
-               socket.emit('loadCases',ev);
-             });
+               
+
       });
 
       socket.on('loadResult', function(_id){
          
       });
-
+      
+      //event info load for calendar page in select specific event
       socket.on('loadEventInfo', function(data){
             Event.findOne({ _id : data })
                  .populate('priorList')
                  .populate('exceptors.except')
                  .exec(function(err, data){
-                   //data.exceptors.forEach(function(item){
-                     //console.log(item);
-                     //console.log(item.except.name);
-                   //});
-                   //
-                   console.log(data);
                    socket.emit('loadEventInfo', data);
                  });
-          
       });
 
       //apply for case
@@ -115,50 +133,37 @@ module.exports = function(io, connect,  sessionStore) {
             Case.findOne({_id : data._id})
                 .populate('_event')
                 .exec(function(err, cas){
-
-                  //apply for prior 
-                  if(cas._event.priorList.indexOf(user._id) != -1){
-                      //confirmation existance of prior list
-
-                      if(moment((new Date())).isAfter(cas._event.priorTime)&&moment((new Date())).isBefore(cas._event.priorEnd)){
-                        console.log(new Date());
-                        console.log(cas._event.priorTime);
-                        console.log(cas._event.priorEnd);
-                       //confirmation time bound for prior
-                          if(cas.attendants.length >= cas.maxPosition){
-                            //not available positions
-
-                            socket.emit('alert', '이미 꽉찼습니다.');
-                            console.log('full - pr');
-
-
-                          }else{
-                            //exist available positions
-                            cas.attendants.push(user._id);
-                            cas.save(function(err){
-                              if(err){
-                                socket.emit('dberr');
-                                return handleError(err);}
-                              else{
-                                socket.emit('applyOk');
-                                console.log('apply - pr');
-
-                              }
-
-                            });
-                          }
+                   
+                  var count=0;
+                  var max = cas.maxPosition;
+                  cas._event.applier.forEach(function(data){
+                      console.log(data);
+                      if(user._id.toString() === data.toString()){
+                        count = count + 1;
                       }
+                  });
 
-                  }
-                
+                  console.log('count:'+count);
+                  console.log( cas._event.exceptors);
+
+                  cas._event.exceptors.forEach(function(data){
+                    console.log(data.except);
+                    console.log(data.num);
+
+                    if(data.except.toString() === user._id.toString()){
+                      max = data.num;
+                  }});
+                  console.log('max:'+max);
+
+
                   //apply for ordinary students
                   if(moment((new Date())).isAfter(cas._event.applyTime)&&moment((new Date())).isBefore(cas._event.applyEnd)){
-                        console.log(new Date());
-                        console.log(cas._event.applyTime);
-                        console.log(cas._event.applyEnd);
+                        //console.log(new Date());
+                        //console.log(cas._event.applyTime);
+                        //console.log(cas._event.applyEnd);
 
                           if(cas.attendants.length >= cas.maxPosition){
-                            console.log('full - or');
+                            //console.log('full - or');
                             socket.emit('full');
                           }else{
                                 cas.attendants.push(user._id);
@@ -169,24 +174,161 @@ module.exports = function(io, connect,  sessionStore) {
                                     return handleError(err);}
                                   else
                                   {
-                                    socket.emit('applyOk');
+                                    socket.emit('applyOk', '신청성공!');
                                     console.log('apply - or');
                                   }
                                 });
 
                                 }
-                 }else{
+                 
+                  //apply for prior 
+                  }else if(cas._event.priorList.indexOf(user._id) != -1){
+
+                        //console.log(new Date());
+                        //console.log(cas._event.priorTime);
+                        //console.log(cas._event.priorEnd);
+                        //console.log(moment((new Date())).isAfter(cas._event.priorTime));
+                        //console.log(moment((new Date())).isBefore(cas._event.priorEnd));
+                        //console.log();
+
+                      //confirmation existance of prior list
+                          
+                      if(moment((new Date())).isAfter(cas._event.priorTime)&&moment((new Date())).isBefore(cas._event.priorEnd)){
+                        //console.log(new Date());
+                        //console.log(cas._event.priorTime);
+                        //console.log(cas._event.priorEnd);
+                          //confirmation time bound for prior
+                          if(cas.attendants.length >= cas.maxPosition){
+                            //not available positions
+
+                            socket.emit('alert', '이미 꽉찼습니다.');
+                            //console.log('full - pr');
+
+
+                          }else{
+                            //exist available positions
+                            
+                              var tmp;
+                              cas.attendants.push(user._id);
+                              cas._event.applier.push(user._id);
+                              cas._event.save(function(err){
+                                //console.log(cas._event);
+                                if(err)
+                                {
+                                    socket.emit('dberrout');
+                                }else{
+                                    cas.save(function(err){
+                                      if(err){
+                                        socket.emit('dberr');
+                                        return handleError(err);
+                                      }else{
+
+                                         User.findOne({_id: user._id}, function(err,user){ 
+                                           console.log(user);
+                                            if(err){
+                                              socket.emit('alert','dberruser');
+                                            }else{
+                                                user.cases.push(cas._id); 
+                                                console.log(user);
+
+                                                user.save(function(err){
+                                                  if(err){
+                                                        socket.emit('alert','dberruser2');
+                                                  }else{
+
+                                                      socket.emit('applyOk','우선권자 신청성공!');}
+                                                });
+                                            }
+                                            
+                                         });
+
+
+                                      }
+
+                                  });                              
+                              }
+
+                            });
+                          }
+                      }
+                  }else{
                          socket.emit('alert', '신청기간이 아닙니다.');
-                         console.log("not perioid");
-                 }
+                  }
 
-            });
 
+        });
 
 
 
       });
+
+      socket.on('deleteEvent', function(data){
+        console.log(data);
+
+        Case.findOne({_id : data._id})
+             .populate('attendants')
+             .populate('_event')
+             .exec(function(err, cs){
+               if(err){
+                    socket.emit('dberr');
+               }else{
+                 var idx = cs.attendants.indexOf(user._id);
+                 cs.attendants.splice(idx,1);
+                 var it = cs._event.applier.indexOf(user._id);
+                 cs._event.applier.splice(it,1);
+                 cs.save(function(err){
+                    if(err){
+                    socket.emit('dberr');
+                    }else{
+                      cs._event.save(function(err){
+
+                           if(err){
+                                socket.emit('dberr');
+                           }else{
+                                User.findOne({_id : user._id})
+                                    .exec(function(err,us){
+                                     if(err){
+                                           socket.emit('dberr');
+                                     }else{
       
+                                       var ix = us.cases.indexOf(data._id);
+                                       us.cases.splice(ix,1);
+                                       us.save(function(err){
+                                            if(err){
+                                               socket.emit('dberr');
+                                            }else{
+                                               socket.emit('alert','삭제완료!');
+                                            }//fifth else
+
+
+                                       });
+                                     
+                                     }//forth else
+
+                                }); 
+                           
+                           
+                           }//third else
+
+                      });
+
+
+                      
+                    }//second else
+                 
+                });
+
+
+
+
+                //first else
+                }
+
+               });
+
+
+        /////////////////
+      });
 
 
       socket.on('serverTime', function() {

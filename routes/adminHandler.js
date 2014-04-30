@@ -1,7 +1,6 @@
 var Event = require('../models/event');
 var Case = require('../models/case');
 var User = require('../models/user');
-var Except = require('../models/exceptor');
 var async = require('async');
 var mongoose = require('mongoose');
 
@@ -67,7 +66,13 @@ module.exports = function(app) {
       eventDoc.priorList.push(items);
     });
 
-    eventDoc.exceptionList=[];
+    eventDoc.applyNum=[];
+    var tempc={};
+    tempc["count"]=1;
+    eventDoc.applyNum.push(tempc);
+    console.log(tempc);
+    console.log(eventDoc);
+
  
     var ev = new Event(eventDoc);
 
